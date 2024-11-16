@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Emprendedores</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/formulario.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <!-- Encabezado con el botón de Logout -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Gestión de Emprendedores</h2>
+            <!-- Botón de Logout -->
+            <a href="/logout" class="btn btn-outline-danger">Cerrar Sesión</a>
+        </div>
+
+        <!-- Buscador -->
+        <div class="mb-3">
+            <input type="text" id="searchInput" class="form-control" placeholder="Buscar..." onkeyup="searchTable()">
+        </div>
+
+        <!-- Botón para Agregar Emprendedor (abre el modal) -->
+        <button id="btnAgregar" class="btn btn-dark mb-4" data-bs-toggle="modal" data-bs-target="#agregarEmprendedorModal">
+            Agregar
+        </button>
+
+        <!-- Modal para Crear Emprendedor -->
+        <div class="modal fade" id="agregarEmprendedorModal" tabindex="-1" aria-labelledby="agregarEmprendedorModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="agregarEmprendedorModalLabel">Crear Emprendedor</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="/crear" method="POST" class="mb-5">
+                            <div class="mb-3">
+                                <label for="nombre" class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" required oninput="validarNombre()">
+                            </div>
+                            <div class="mb-3">
+                                <label for="correo" class="form-label">Correo</label>
+                                <input type="email" class="form-control" id="correo" name="correo" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="telefono" class="form-label">Teléfono</label>
+                                <input type="text" class="form-control" id="telefono" name="telefono" min="0" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="descripcion" class="form-label">Descripción</label>
+                                <textarea class="form-control" id="descripcion" name="descripcion" rows="3" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Crear Emprendedor</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones de Exportación -->
+        <div class="mb-3">
+            <a href="/exportar/excel" class="btn btn-success">Exportar a Excel</a>
+            <a href="/exportar/pdf" class="btn btn-danger">Exportar a PDF</a>
+            <a href="/exportar/txt" class="btn btn-info">Exportar a TXT</a>
+            <a href="/exportar/png" class="btn btn-warning">Exportar a PNG</a>
+        </div>
+
+        <!-- Lista de Emprendedores -->
+        <h3>Emprendedores Registrados</h3>
+
+        <table class="table table-bordered table-striped table-hover table-sm table-responsive">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Correo</th>
+                    <th>Teléfono</th>
+                    <th>Descripción</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% emprendedores.forEach(emprendedor => { %>
+                    <tr>
+                        <td><%= emprendedor.nombre %></td>
+                        <td><%= emprendedor.correo %></td>
+                        <td><%= emprendedor.telefono %></td>
+                        <td><%= emprendedor.descripcion %></td>
+                        <td>
+                            <!-- Botón de Editar -->
+                            <a href="/editar/<%= emprendedor._id %>" class="btn btn-warning btn-sm">Editar</a>
+        
+                            <!-- Botón de Eliminar -->
+                            <form action="/eliminar/<%= emprendedor._id %>" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                            </form>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+        
+    </div>
+
+    <!-- Bootstrap JS y dependencias -->
+    <script src="/js/Alerts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
+    <script src="/js/formulario.js"></script>
+</body>
+</html>
