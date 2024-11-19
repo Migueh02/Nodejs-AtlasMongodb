@@ -43,42 +43,30 @@ const authRoutes = require('./routes/rutas');
 app.use('/', authRoutes);
 
 // Ruta de Exportación a Excel
-app.get('/exportar/pdf', async (req, res) => {
-    try {
-        // Obtener todos los emprendedores de la base de datos
-        const emprendedores = await Emprendedor.find();
+app.get('/exportar/excel', async (req, res) => {
+    const emprendedores = await Emprendedor.find();
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Emprendedores');
 
-        // Crear un documento PDF en memoria
-        const doc = new PDFDocument();
-        let buffers = [];
-        
-        // Capturar los datos del PDF en un buffer
-        doc.on('data', buffers.push.bind(buffers));
-        doc.on('end', () => {
-            const pdfData = Buffer.concat(buffers);
-            // Configurar los encabezados para la descarga
-            res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Disposition', 'attachment; filename=Emprendedores.pdf');
-            res.send(pdfData);
-        });
+    worksheet.columns = [
+        { header: 'Nombre', key: 'nombre' },
+        { header: 'Correo', key: 'correo' },
+        { header: 'Teléfono', key: 'telefono' },
+        { header: 'Descripción', key: 'descripcion' }
+    ];
 
-        // Agregar contenido al PDF
-        doc.fontSize(18).text('Emprendedores Registrados', { align: 'center' });
-        doc.moveDown();
-        doc.fontSize(12).text('Nombre | Correo | Teléfono | Descripción');
-        doc.moveDown();
+    emprendedores.forEach(emprendedor => {
+        worksheet.addRow(emprendedor);
+    });
 
-        // Agregar datos de cada emprendedor
-        emprendedores.forEach(emprendedor => {
-            doc.text(`${emprendedor.nombre} | ${emprendedor.correo} | ${emprendedor.telefono} | ${emprendedor.descripcion}`);
-        });
-
-        // Finalizar el documento
-        doc.end();
-    } catch (err) {
-        console.error('Error al generar el PDF:', err);
-        res.status(500).send('Error al generar el PDF.');
-    }
+    const filePath = path.join(__dirname, 'Emprendedores.xlsx');
+    await workbook.xlsx.writeFile(filePath);
+    res.download(filePath, 'Emprendedores.xlsx', (err) => {
+        if (err) {
+            console.error('Error al descargar archivo:', err);
+        }
+        fs.unlinkSync(filePath); // Elimina el archivo temporal después de la descarga
+    });
 });
 
 // Ruta de Exportación a PDF
