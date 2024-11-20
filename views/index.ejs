@@ -47,7 +47,7 @@
                             </div>
                             <div class="mb-3">
                                 <label for="telefono" class="form-label">Teléfono</label>
-                                <input type="text" class="form-control" id="telefono" name="telefono" min="0" required>
+                                <input type="tel" class="form-control" id="telefono" name="telefono" min="0" required oninput="validarTelefono(event)">
                             </div>
                             <div class="mb-3">
                                 <label for="descripcion" class="form-label">Descripción</label>
@@ -93,9 +93,9 @@
                             <a href="/editar/<%= emprendedor._id %>" class="btn btn-warning btn-sm">Editar</a>
         
                             <!-- Botón de Eliminar -->
-                            <form action="/eliminar/<%= emprendedor._id %>" method="POST" style="display:inline;">
-                                <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
-                            </form>
+                            <form action="/eliminar/<%= emprendedor._id %>" method="POST" style="display:inline;" class="delete-form">
+                                <button type="button" class="btn btn-danger btn-sm delete-btn" data-id="<%= emprendedor._id %>">Eliminar</button>
+                            </form>                            
                         </td>
                     </tr>
                 <% }) %>

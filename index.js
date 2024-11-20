@@ -136,44 +136,58 @@ app.get('/exportar/txt', async (req, res) => {
 
 // Ruta de Exportación a PNG
 app.get('/exportar/png', async (req, res) => {
-    const emprendedores = await Emprendedor.find();
-    const html = `
-        <html>
-        <head><style>table, th, td {border: 1px solid black; border-collapse: collapse; padding: 8px;} th {text-align: left;}</style></head>
-        <body>
-            <h2>Emprendedores Registrados</h2>
-            <table>
-                <thead>
-                    <tr><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Descripción</th></tr>
-                </thead>
-                <tbody>
-                    ${emprendedores.map(emprendedor => `
-                        <tr>
-                            <td>${emprendedor.nombre}</td>
-                            <td>${emprendedor.correo}</td>
-                            <td>${emprendedor.telefono}</td>
-                            <td>${emprendedor.descripcion}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        </body>
-        </html>
-    `;
+    try {
+        // Obtener todos los emprendedores de la base de datos
+        const emprendedores = await Emprendedor.find();
+        
+        // Crear el HTML para la tabla
+        const html = `
+            <html>
+            <head><style>table, th, td {border: 1px solid black; border-collapse: collapse; padding: 8px;} th {text-align: left;}</style></head>
+            <body>
+                <h2>Emprendedores Registrados</h2>
+                <table>
+                    <thead>
+                        <tr><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Descripción</th></tr>
+                    </thead>
+                    <tbody>
+                        ${emprendedores.map(emprendedor => `
+                            <tr>
+                                <td>${emprendedor.nombre}</td>
+                                <td>${emprendedor.correo}</td>
+                                <td>${emprendedor.telefono}</td>
+                                <td>${emprendedor.descripcion}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </body>
+            </html>
+        `;
 
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    await page.setContent(html);
-    const filePath = path.join(__dirname, 'Emprendedores.png');
-    await page.screenshot({ path: filePath });
-    await browser.close();
+        // Iniciar Puppeteer y tomar una captura de pantalla
+        const browser = await puppeteer.launch();
+        const page = await browser.newPage();
+        await page.setContent(html);
+        
+        // Usar la carpeta temporal en Railway para guardar el PNG
+        const filePath = path.join('/tmp', 'Emprendedores.png');
+        await page.screenshot({ path: filePath });
 
-    res.download(filePath, 'Emprendedores.png', (err) => {
-        if (err) {
-            console.error('Error al descargar archivo:', err);
-        }
-        fs.unlinkSync(filePath); // Elimina el archivo temporal después de la descarga
-    });
+        await browser.close();
+
+        // Servir el archivo PNG generado
+        res.download(filePath, 'Emprendedores.png', (err) => {
+            if (err) {
+                console.error('Error al descargar archivo:', err);
+                res.status(500).send('Error al descargar el archivo.');
+            }
+            fs.unlinkSync(filePath); // Eliminar el archivo temporal después de la descarga
+        });
+    } catch (err) {
+        console.error('Error al generar el PNG:', err);
+        res.status(500).send('Error al generar el PNG.');
+    }
 });
 
 // Iniciar el servidor
