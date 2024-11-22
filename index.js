@@ -76,38 +76,58 @@ app.get('/exportar/pdf', async (req, res) => {
         // Obtener todos los emprendedores de la base de datos
         const emprendedores = await Emprendedor.find();
 
-        // Generar el contenido HTML para el PDF
-        let htmlContent = `
-            <h1 style="text-align: center;">Emprendedores Registrados</h1>
-            <table border="1" style="width: 100%; border-collapse: collapse;">
-                <tr>
-                    <th>Nombre</th>
-                    <th>Correo</th>
-                    <th>Teléfono</th>
-                    <th>Descripción</th>
-                </tr>`;
-        
-        emprendedores.forEach(emp => {
-            htmlContent += `
-                <tr>
-                    <td>${emp.nombre}</td>
-                    <td>${emp.correo}</td>
-                    <td>${emp.telefono}</td>
-                    <td>${emp.descripcion}</td>
-                </tr>`;
+        // Crear un documento PDF en memoria
+        const doc = new PDFDocument({ margin: 30 });
+        let buffers = [];
+
+        // Capturar los datos del PDF en un buffer
+        doc.on('data', buffers.push.bind(buffers));
+        doc.on('end', () => {
+            const pdfData = Buffer.concat(buffers);
+            // Configurar los encabezados para la descarga
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', 'attachment; filename=Emprendedores.pdf');
+            res.send(pdfData);
         });
-        htmlContent += `</table>`;
 
-        // Configurar el archivo PDF
-        const file = { content: htmlContent };
+        // Título del PDF
+        doc.fontSize(18).text('Emprendedores Registrados', { align: 'center' });
+        doc.moveDown(1);
 
-        // Generar el PDF en memoria
-        const pdfBuffer = await pdf.generatePdf(file, { format: 'A4' });
+        // Crear tabla
+        const tableTop = 100;
+        const itemMargin = 5;
 
-        // Enviar el PDF como respuesta
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'attachment; filename=Emprendedores.pdf');
-        res.send(pdfBuffer);
+        // Dibujar encabezados de la tabla
+        doc.fontSize(12).text('Nombre', 50, tableTop);
+        doc.text('Correo', 200, tableTop);
+        doc.text('Teléfono', 350, tableTop);
+        doc.text('Descripción', 450, tableTop);
+        
+        // Línea debajo de los encabezados
+        doc.moveTo(50, tableTop + 15).lineTo(550, tableTop + 15).stroke();
+
+        // Añadir filas con los datos de los emprendedores
+        let position = tableTop + 25;
+
+        emprendedores.forEach(emp => {
+            const rowHeight = 20;
+
+            // Escribir cada columna en la fila
+            doc.fontSize(10)
+                .text(emp.nombre, 50, position)
+                .text(emp.correo, 200, position)
+                .text(emp.telefono, 350, position)
+                .text(emp.descripcion, 450, position, { width: 100 });
+
+            // Dibujar una línea debajo de cada fila
+            doc.moveTo(50, position + rowHeight - 5).lineTo(550, position + rowHeight - 5).stroke();
+
+            position += rowHeight;
+        });
+
+        // Finalizar el documento
+        doc.end();
     } catch (err) {
         console.error('Error al generar el PDF:', err);
         res.status(500).send('Error al generar el PDF.');
